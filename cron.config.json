@@ -1,0 +1,9 @@
+{
+    "scrape": {
+        "enabled": true,
+        "interval": "hourly",
+        "batchSize": 10,
+        "maxRetries": 3,
+        "userAgent": "mobile"
+    }
+}
