@@ -1,0 +1,3 @@
+{
+  "/api/cron/nia-scrape/route": "app/api/cron/nia-scrape/route.js"
+}

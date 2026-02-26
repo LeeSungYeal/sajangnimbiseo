@@ -1,0 +1,71 @@
+[00:00:02.418] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:02.783] Server  LOG     ✓ Ready in 1952ms
+[00:00:03.978] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:01:07.744] Server  LOG     [rfp-scrape] Cron started at 2026-02-25T08:48:53.466Z
+[00:01:08.390] Server  LOG     [RfpScraper] Processing 2 active orgs
+[00:01:13.939] Server  LOG     [RfpScraper] 한국지능정보사회진흥원: success (inserted=10, skipped=0)
+[00:01:18.067] Server  LOG     [RfpScraper] 정보통신산업진흥원: success (inserted=10, skipped=0)
+[00:01:20.698] Server  LOG     [Email] 신규 공고 20건 이메일 발송 완료 → sylee@mtsco.co.kr
+[00:01:20.698] Server  LOG     [rfp-scrape] Done. inserted=20, skipped=0, errors=0
+[00:08:44.040] Server  LOG     [rfp-scrape] Cron started at 2026-02-25T08:56:28.358Z
+[00:08:45.117] Server  LOG     [RfpScraper] Processing 2 active orgs
+[00:08:51.308] Server  LOG     [RfpScraper] 한국지능정보사회진흥원: success (inserted=10, skipped=0)
+[00:08:55.568] Server  LOG     [RfpScraper] 정보통신산업진흥원: success (inserted=10, skipped=0)
+[00:08:57.540] Server  LOG     [Email] 신규 공고 20건 이메일 발송 완료 → sylee@mtsco.co.kr
+[00:08:57.540] Server  LOG     [rfp-scrape] Done. inserted=20, skipped=0, errors=0
+[00:15:34.635] Server  LOG     [rfp-scrape] Cron started at 2026-02-25T09:03:18.953Z
+[00:15:35.335] Server  LOG     [RfpScraper] Processing 2 active orgs
+[00:15:40.953] Server  LOG     [RfpScraper] 한국지능정보사회진흥원: success (inserted=10, skipped=0)
+[00:15:45.299] Server  LOG     [RfpScraper] 정보통신산업진흥원: success (inserted=10, skipped=0)
+[00:15:46.654] Server  LOG     [Email] 신규 공고 20건 이메일 발송 완료 → sylee@mtsco.co.kr
+[00:15:46.655] Server  LOG     [rfp-scrape] Done. inserted=20, skipped=0, errors=0
+[00:17:24.006] Server  LOG     [rfp-scrape] Cron started at 2026-02-25T09:05:08.324Z
+[00:17:24.216] Server  LOG     [RfpScraper] Processing 2 active orgs
+[00:17:24.958] Server  WARN    [NiaScraper] Detail fetch failed for bcIdx=29066: Error: HTTP 504: https://www.nia.or.kr/site/nia_kor/ex/bbs/View.do?cbIdx=78336&bcIdx=29066
+[00:17:29.500] Server  LOG     [RfpScraper] 한국지능정보사회진흥원: success (inserted=10, skipped=0)
+[00:17:33.707] Server  LOG     [RfpScraper] 정보통신산업진흥원: success (inserted=10, skipped=0)
+[00:17:34.175] Server  LOG     [Email] 신규 공고 20건 이메일 발송 완료 → sylee@mtsco.co.kr
+[00:17:34.175] Server  LOG     [rfp-scrape] Done. inserted=20, skipped=0, errors=0
+[00:21:44.571] Server  LOG     [rfp-scrape] Cron started at 2026-02-25T09:09:28.889Z
+[00:21:45.417] Server  LOG     [RfpScraper] Processing 2 active orgs
+[00:21:51.052] Server  LOG     [RfpScraper] 한국지능정보사회진흥원: success (inserted=10, skipped=0)
+[00:21:55.152] Server  LOG     [RfpScraper] 정보통신산업진흥원: success (inserted=10, skipped=0)
+[00:21:57.849] Server  LOG     [Email] 신규 공고 20건 이메일 발송 완료 → sylee@mtsco.co.kr
+[00:21:57.850] Server  LOG     [rfp-scrape] Done. inserted=20, skipped=0, errors=0
+[00:25:59.246] Server  LOG     [rfp-scrape] Cron started at 2026-02-25T09:13:43.564Z
+[00:25:59.852] Server  LOG     [RfpScraper] Processing 2 active orgs
+[00:26:05.321] Server  LOG     [RfpScraper] 한국지능정보사회진흥원: success (inserted=10, skipped=0)
+[00:26:09.541] Server  LOG     [RfpScraper] 정보통신산업진흥원: success (inserted=10, skipped=0)
+[00:26:10.503] Server  LOG     [Email] 신규 공고 20건 이메일 발송 완료 → sylee@mtsco.co.kr
+[00:26:10.503] Server  LOG     [rfp-scrape] Done. inserted=20, skipped=0, errors=0
+[00:27:11.539] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+[00:27:11.539] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+[00:27:11.539] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+[00:27:11.539] Browser WARN    The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+[00:32:55.867] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:33:22.424] Server  LOG     [rfp-scrape] Cron started at 2026-02-25T09:21:06.743Z
+[00:33:22.624] Server  LOG     [RfpScraper] Processing 2 active orgs
+[00:33:28.500] Server  LOG     [RfpScraper] 한국지능정보사회진흥원: success (inserted=10, skipped=0)
+[00:33:32.807] Server  LOG     [RfpScraper] 정보통신산업진흥원: success (inserted=10, skipped=0)
+[00:33:34.212] Server  LOG     [Email] 신규 공고 20건 이메일 발송 완료 → sylee@mtsco.co.kr
+[00:33:34.212] Server  LOG     [rfp-scrape] Done. inserted=20, skipped=0, errors=0
+[00:38:10.937] Server  LOG       Reload env: .env.local
+[00:38:39.253] Server  LOG       Reload env: .env.local
+[00:39:00.667] Server  LOG     [rfp-scrape] Cron started at 2026-02-25T09:26:44.985Z
+[00:39:01.057] Server  LOG     [RfpScraper] Processing 2 active orgs
+[00:39:07.105] Server  LOG     [RfpScraper] 한국지능정보사회진흥원: success (inserted=10, skipped=0)
+[00:39:11.589] Server  LOG     [RfpScraper] 정보통신산업진흥원: success (inserted=10, skipped=0)
+[00:39:12.734] Server  LOG     [Email] 신규 공고 20건 이메일 발송 완료 → sylee@mtsco.co.kr,siger74@naver.com
+[00:39:12.734] Server  LOG     [rfp-scrape] Done. inserted=20, skipped=0, errors=0

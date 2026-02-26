@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, BarChart3, FileText, Settings, UserCircle } from "lucide-react";
+import { LayoutDashboard, BarChart3, FileText, Settings, UserCircle, Megaphone } from "lucide-react";
 
 const navigation = [
     { name: "대시보드", href: "/dashboard", icon: LayoutDashboard },
     { name: "내 매장 분석", href: "/analytics", icon: BarChart3 },
     { name: "AI 리포트", href: "/dashboard/reports", icon: FileText },
+    { name: "사업공고", href: "/announcements", icon: Megaphone },
     { name: "설정", href: "/dashboard/settings", icon: Settings },
 ];
 
@@ -24,7 +25,10 @@ export function Sidebar() {
             </div>
             <nav className="flex-1 space-y-1 px-3 py-4">
                 {navigation.map((item) => {
-                    const isActive = pathname === item.href;
+                    const isActive =
+                        item.href === "/dashboard"
+                            ? pathname === item.href
+                            : pathname.startsWith(item.href);
                     return (
                         <Link
                             key={item.name}

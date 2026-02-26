@@ -1,0 +1,35 @@
+{
+  "node": {
+    "40f3350d493fdfe7e9bba79166fbb36715a4a0a40f": {
+      "workers": {
+        "app/analytics/page": {
+          "moduleId": "[project]/.next-internal/server/app/analytics/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions/store.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "extractStoreName",
+          "filename": "src/lib/actions/store.ts"
+        }
+      },
+      "layer": {
+        "app/analytics/page": "action-browser"
+      },
+      "exportedName": "extractStoreName",
+      "filename": "src/lib/actions/store.ts"
+    },
+    "606a068d6f471deb53dd457c2c2b9282f3a9f78025": {
+      "workers": {
+        "app/analytics/page": {
+          "moduleId": "[project]/.next-internal/server/app/analytics/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/lib/actions/store.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "registerStore",
+          "filename": "src/lib/actions/store.ts"
+        }
+      },
+      "layer": {
+        "app/analytics/page": "action-browser"
+      },
+      "exportedName": "registerStore",
+      "filename": "src/lib/actions/store.ts"
+    }
+  },
+  "edge": {}
+}

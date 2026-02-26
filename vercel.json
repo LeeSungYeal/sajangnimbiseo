@@ -1,0 +1,12 @@
+{
+    "crons": [
+        {
+            "path": "/api/cron/rfp-scrape",
+            "schedule": "0 * * * *"
+        },
+        {
+            "path": "/api/cron/nia-scrape",
+            "schedule": "30 * * * *"
+        }
+    ]
+}
