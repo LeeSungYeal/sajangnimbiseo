@@ -131,10 +131,10 @@ export default function AnnouncementDetailPage() {
                         {announcement.category ?? "기타"}
                     </span>
                     <span className={`text-sm font-bold px-3 py-1 rounded-full ${dday.label === "마감"
-                            ? "bg-slate-100 text-slate-400"
-                            : dday.urgent
-                                ? "bg-red-50 text-red-600 border border-red-200"
-                                : "bg-slate-50 text-slate-600 border border-slate-200"
+                        ? "bg-slate-100 text-slate-400"
+                        : dday.urgent
+                            ? "bg-red-50 text-red-600 border border-red-200"
+                            : "bg-slate-50 text-slate-600 border border-slate-200"
                         }`}>
                         {dday.label}
                     </span>

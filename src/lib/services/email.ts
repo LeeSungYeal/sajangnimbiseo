@@ -29,7 +29,8 @@ export type NewAnnouncementItem = {
 };
 
 export async function sendNewAnnouncementsEmail(
-  items: NewAnnouncementItem[]
+  items: NewAnnouncementItem[],
+  keywords: string[] = []
 ): Promise<void> {
   if (items.length === 0) return;
 
@@ -52,20 +53,29 @@ export async function sendNewAnnouncementsEmail(
     return `<span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;background-color:${s.bg};color:${s.color};white-space:nowrap;">${c}</span>`;
   };
 
+  // ── 기관명 → 약어 매핑 ──────────────────────────────────────────────────────
+  const ORG_ABBR: Record<string, string> = {
+    "한국지능정보사회진흥원": "NIA",
+    "정보통신산업진흥원": "NIPA",
+    "정보통신기획평가원": "IITP",
+    "한국산업기술기획평가원": "KEIT",
+    "나라장터_입찰": "G2B",
+  };
+
   // ── 행 생성 ─────────────────────────────────────────────────────────────────
   const rows = items.map((item, i) => {
     const dateStr = item.announce_date ?? "-";
+    const orgLabel = item.org_name ? (ORG_ABBR[item.org_name] ?? item.org_name) : "미상";
     const titleHtml = item.source_url
-      ? `<a href="${item.source_url}" style="color:#0a1e6e;text-decoration:none;font-weight:900;font-size:14px;line-height:1.6;letter-spacing:-0.01em;">${item.title} <span style="font-size:12px;">↗</span></a>`
-      : `<span style="color:#0a1e6e;font-weight:900;font-size:14px;line-height:1.6;">${item.title}</span>`;
+      ? `<a href="${item.source_url}" style="color:#1d4ed8;text-decoration:underline;font-weight:700;font-size:14px;line-height:1.6;letter-spacing:-0.01em;">${item.title} <span style="font-size:12px;">↗</span></a>`
+      : `<span style="color:#1e293b;font-weight:700;font-size:14px;line-height:1.6;">${item.title}</span>`;
     const rowBg = i % 2 === 0 ? "#ffffff" : "#f9fafb";
 
     return `<tr style="background-color:${rowBg};">
       <td style="padding:14px 0;border-bottom:1px solid #edf0f7;text-align:center;vertical-align:middle;width:40px;color:#3a4a6b;font-size:12px;font-weight:700;">${i + 1}</td>
-      <td style="padding:14px 8px;border-bottom:1px solid #edf0f7;">${titleHtml}</td>
-      <td style="padding:14px 10px;border-bottom:1px solid #edf0f7;font-size:12px;color:#1e293b;white-space:nowrap;vertical-align:middle;font-weight:600;">${item.org_name ?? "미상"}</td>
-      <td style="padding:14px 10px;border-bottom:1px solid #edf0f7;vertical-align:middle;">${categoryBadge(item.category)}</td>
-      <td style="padding:14px 16px 14px 8px;border-bottom:1px solid #edf0f7;white-space:nowrap;vertical-align:middle;font-size:12px;color:#1e293b;font-weight:600;">${dateStr}</td>
+      <td style="padding:14px 8px;border-bottom:1px solid #edf0f7;vertical-align:top;">${titleHtml}</td>
+      <td style="padding:14px 10px;border-bottom:1px solid #edf0f7;font-size:12px;color:#1e293b;white-space:nowrap;vertical-align:middle;font-weight:600;width:80px;text-align:center;">${orgLabel}</td>
+      <td style="padding:14px 16px 14px 8px;border-bottom:1px solid #edf0f7;white-space:nowrap;vertical-align:middle;font-size:12px;color:#1e293b;font-weight:600;width:110px;text-align:center;">${dateStr}</td>
     </tr>`;
   }).join("");
 
@@ -118,39 +128,50 @@ export async function sendNewAnnouncementsEmail(
                 <tr><td style="padding:10px 16px;text-align:center;">
                   <div style="font-size:38px;font-weight:900;color:#f5a623;line-height:1;letter-spacing:-2px;">${items.length}</div>
                   <div style="font-size:10px;color:#a0b4e8;margin-top:4px;">건의 신규 공고</div>
-                  <div style="font-size:10px;color:#6a80b0;margin-top:1px;">${shortDate} 기준</div>
                 </td></tr>
               </table>
             </td>
           </tr></table>
         </td>
       </tr>
-      <!-- 클릭 안내 버튼 -->
+      <!-- 키워드 + 기관 -->
       <tr>
         <td style="padding:14px 28px 20px;">
-          <table cellpadding="0" cellspacing="0">
-            <tr><td style="background-color:#f5a623;border-radius:6px;padding:9px 24px;text-align:center;">
-              <span style="font-size:12px;font-weight:700;color:#1c3d9c;">&#128276;&nbsp; 공고명 클릭 시 원문으로 바로 이동합니다</span>
-            </td></tr>
+          <table cellpadding="0" cellspacing="0" style="width:100%;">
+            <tr>
+              <td>
+                <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#e0e8ff;line-height:1.8;">
+                  <span style="color:#a0b4e8;font-weight:700;">키워드 :&nbsp;</span>${keywords.length > 0 ? keywords.join("  ") : `<span style="color:#6a80b0;">등록된 키워드 없음</span>`}
+                </p>
+                <p style="margin:0;font-size:12px;font-weight:600;color:#e0e8ff;line-height:1.8;">
+                  <span style="color:#a0b4e8;font-weight:700;">수집기관 :&nbsp;</span>NIA &nbsp;·&nbsp; NIPA &nbsp;·&nbsp; IITP &nbsp;·&nbsp; KEIT &nbsp;·&nbsp; G2B
+                </p>
+              </td>
+            </tr>
           </table>
         </td>
       </tr>
     </table>
 
-    <!-- ③ 테이블 헤더 -->
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f2f7;border-top:1px solid #dde2ef;">
-      <tr>
-        <th style="width:40px;padding:10px 0;font-size:11px;font-weight:700;color:#6b7897;text-align:center;">#</th>
-        <th style="padding:10px 8px;font-size:11px;font-weight:700;color:#3a4a6b;text-align:left;letter-spacing:0.05em;">공&nbsp;&nbsp;고&nbsp;&nbsp;명</th>
-        <th style="padding:10px 10px;font-size:11px;font-weight:700;color:#3a4a6b;text-align:left;white-space:nowrap;">기 관</th>
-        <th style="padding:10px 10px;font-size:11px;font-weight:700;color:#3a4a6b;text-align:center;white-space:nowrap;">구 분</th>
-        <th style="padding:10px 16px 10px 8px;font-size:11px;font-weight:700;color:#3a4a6b;text-align:right;white-space:nowrap;">날 짜</th>
-      </tr>
-    </table>
-
-    <!-- ④ 공고 행 -->
+    <!-- ③ 헤더 + 공고 행 (단일 테이블) -->
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#ffffff;">
-      ${rows}
+      <colgroup>
+        <col style="width:40px;">
+        <col style="width:auto;">
+        <col style="width:150px;">
+        <col style="width:110px;">
+      </colgroup>
+      <thead style="background-color:#f0f2f7;border-top:1px solid #dde2ef;">
+        <tr>
+          <th style="padding:10px 0;font-size:11px;font-weight:700;color:#6b7897;text-align:center;">#</th>
+          <th style="padding:10px 8px;font-size:11px;font-weight:700;color:#3a4a6b;text-align:center;letter-spacing:0.05em;">공&nbsp;&nbsp;고&nbsp;&nbsp;명</th>
+          <th style="padding:10px 10px;font-size:11px;font-weight:700;color:#3a4a6b;text-align:center;white-space:nowrap;">기관</th>
+          <th style="padding:10px 16px 10px 8px;font-size:11px;font-weight:700;color:#3a4a6b;text-align:center;white-space:nowrap;">공고날짜</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
     </table>
 
     <!-- ⑥ 푸터 -->
@@ -184,12 +205,16 @@ export async function sendNewAnnouncementsEmail(
 </body>
 </html>`;
 
-  await transporter.sendMail({
-    from: `"에이마비서 알림" <${from}>`,
-    to: to,
-    subject: `[사업공고] 신규 ${items.length}건 - ${new Date().toLocaleDateString("ko-KR")}`,
-    html,
-  });
+  // 수신자 목록을 콤마로 분리하여 각각 개별 발송
+  const recipients = to.split(",").map(addr => addr.trim()).filter(Boolean);
 
-  console.log(`[Email] 신규 공고 ${items.length}건 이메일 발송 완료 → ${to}`);
+  for (const recipient of recipients) {
+    await transporter.sendMail({
+      from: `"에이마비서 알림" <${from}>`,
+      to: recipient,
+      subject: `[사업공고] 신규 ${items.length}건 - ${new Date().toLocaleDateString("ko-KR")}`,
+      html,
+    });
+    console.log(`[Email] 신규 공고 ${items.length}건 이메일 발송 완료 → ${recipient}`);
+  }
 }

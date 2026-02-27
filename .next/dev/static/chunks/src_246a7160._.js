@@ -56,6 +56,7 @@ const EMPTY_FORM = {
 };
 const ORG_TYPES = [
     "국가기관",
+    "공공기관",
     "정부출연기관"
 ];
 const COLL_METHS = [

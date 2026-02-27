@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 // ── 타입 ──────────────────────────────────────────────────────────────────────
-type OrgType = "국가기관" | "정부출연기관";
+type OrgType = "국가기관" | "정부출연기관" | "공공기관";
 type CollMeth = "API" | "RSS" | "Static Scraper" | "Dynamic Scraper";
 
 type PublicOrg = {
@@ -32,7 +32,7 @@ const EMPTY_FORM: Omit<PublicOrg, "id" | "created_at" | "updated_at"> = {
     is_active: true,
 };
 
-const ORG_TYPES: OrgType[] = ["국가기관", "정부출연기관"];
+const ORG_TYPES: OrgType[] = ["국가기관", "공공기관", "정부출연기관"];
 const COLL_METHS: CollMeth[] = ["API", "RSS", "Static Scraper", "Dynamic Scraper"];
 
 const METH_BADGE: Record<CollMeth, string> = {

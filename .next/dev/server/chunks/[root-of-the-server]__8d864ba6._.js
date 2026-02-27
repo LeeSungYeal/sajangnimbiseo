@@ -859,7 +859,15 @@ class RfpScraper {
     async run() {
         const supabase = getAdminClient();
         const results = [];
-        // 1. 수집 활성화된 기관 목록 조회
+        // 1. 활성 필터링 키워드 목록 조회
+        const { data: keywordRows } = await supabase.from("rfp_filter_keywords").select("keyword").eq("is_active", true);
+        const filterKeywords = (keywordRows ?? []).map((r)=>r.keyword.toLowerCase());
+        if (filterKeywords.length > 0) {
+            console.log(`[RfpScraper] 필터링 키워드 ${filterKeywords.length}개 적용: ${filterKeywords.join(", ")}`);
+        } else {
+            console.log("[RfpScraper] 필터링 키워드 없음 — 전체 수집 모드");
+        }
+        // 2. 수집 활성화된 기관 목록 조회
         const { data: orgs, error: orgsErr } = await supabase.from("rfp_public_org").select("id, org_name, org_type, homepage_url, rfp_url, coll_meth, is_active").eq("is_active", true);
         if (orgsErr) {
             console.error("[RfpScraper] Failed to fetch orgs:", orgsErr.message);
@@ -879,13 +887,13 @@ class RfpScraper {
             return [];
         }
         console.log(`[RfpScraper] Processing ${orgs.length} active orgs`);
-        // 2. 기관별 수집
+        // 3. 기관별 수집
         for (const org of orgs){
-            const result = await this.scrapeOrg(supabase, org);
+            const result = await this.scrapeOrg(supabase, org, filterKeywords);
             results.push(result);
             console.log(`[RfpScraper] ${org.org_name}: ${result.status} ` + `(inserted=${result.inserted}, skipped=${result.skipped})`);
         }
-        // 3. 신규 공고가 있으면 이메일 발송
+        // 4. 신규 공고가 있으면 이메일 발송
         const allNewItems = results.flatMap((r)=>r.newItems ?? []);
         if (allNewItems.length > 0) {
             try {
@@ -896,8 +904,16 @@ class RfpScraper {
         }
         return results;
     }
+    /** 제목 또는 설명에 활성 필터링 키워드가 하나라도 포함되는지 검사 */ matchesKeywords(ann, keywords) {
+        if (keywords.length === 0) return true; // 키워드 없으면 전체 통과
+        const haystack = [
+            ann.title ?? "",
+            ann.description ?? ""
+        ].join(" ").toLowerCase();
+        return keywords.some((kw)=>haystack.includes(kw));
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async scrapeOrg(supabase, org) {
+    async scrapeOrg(supabase, org, filterKeywords = []) {
         const base = {
             org_id: org.id,
             org_name: org.org_name,
@@ -955,11 +971,21 @@ class RfpScraper {
                 error: "공고 없음 (파싱 결과 0건)"
             };
         }
-        // 4. 증분 저장 (unique_key 기준 → 신규만 INSERT)
+        // 4. 필터링 키워드 적용
+        const filtered = announcements.filter((ann)=>this.matchesKeywords(ann, filterKeywords));
+        console.log(`[RfpScraper] ${org.org_name}: 수집 ${announcements.length}건 → 키워드 필터 후 ${filtered.length}건`);
+        if (filtered.length === 0) {
+            return {
+                ...base,
+                status: "skipped",
+                error: "키워드 매칭 결과 0건"
+            };
+        }
+        // 5. 증분 저장 (unique_key 기준 → 신규만 INSERT)
         let inserted = 0;
         let skipped = 0;
         const newItems = [];
-        for (const ann of announcements){
+        for (const ann of filtered){
             if (!ann.title?.trim()) continue;
             const unique_key = buildUniqueKey(org.id, ann.title, ann.announce_date);
             const row = {

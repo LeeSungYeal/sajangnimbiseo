@@ -2,6 +2,9 @@ import * as cheerio from "cheerio";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { scrapeNiaAnnouncements } from "./nia-scraper";
 import { scrapeNipaAnnouncements } from "./nipa-scraper";
+import { scrapeIitpAnnouncements } from "./iitp-scraper";
+import { scrapeKeitAnnouncements } from "./keit-scraper";
+import { scrapeNaraAnnouncements } from "./nara-scraper";
 import { sendNewAnnouncementsEmail, NewAnnouncementItem } from "./email";
 
 // ── Supabase Admin Client (service_role 우선, 없으면 anon key 폴백) ──────────
@@ -35,6 +38,8 @@ export type ScrapedAnnouncement = {
     announce_date?: string | null;   // ISO date string
     description?: string | null;
     source_url?: string | null;
+    org_name?: string | null;        // 발주기관명 (나라장터 등 멀티기관 API에서 사용)
+    demand_org_name?: string | null; // 수요기관명 (나라장터 dminsttNm)
 };
 
 export type ScrapeOrgResult = {
@@ -174,11 +179,42 @@ export class RfpScraper {
         return url.includes("nipa.kr");
     }
 
+    /** IITP(정보통신기획평가원) URL 패턴 감지 */
+    private isIitpUrl(url: string): boolean {
+        return url.includes("iitp.kr");
+    }
+
+    /** KEIT(한국산업기술기획평가원) URL 패턴 감지 */
+    private isKeitUrl(url: string): boolean {
+        return url.includes("keit.re.kr");
+    }
+
+    /** 나라장터(조달청) 기관명 감지 */
+    private isNaraOrg(orgName: string): boolean {
+        return orgName.includes("나라장터") || orgName.includes("조달청");
+    }
+
     async run(): Promise<ScrapeOrgResult[]> {
         const supabase = getAdminClient();
         const results: ScrapeOrgResult[] = [];
 
-        // 1. 수집 활성화된 기관 목록 조회
+        // 1. 활성 필터링 키워드 목록 조회
+        const { data: keywordRows } = await supabase
+            .from("rfp_filter_keywords")
+            .select("keyword")
+            .eq("is_active", true);
+
+        const filterKeywords: string[] = (keywordRows ?? []).map((r: any) =>
+            (r.keyword as string).toLowerCase()
+        );
+
+        if (filterKeywords.length > 0) {
+            console.log(`[RfpScraper] 필터링 키워드 ${filterKeywords.length}개 적용: ${filterKeywords.join(", ")}`);
+        } else {
+            console.log("[RfpScraper] 필터링 키워드 없음 — 전체 수집 모드");
+        }
+
+        // 2. 수집 활성화된 기관 목록 조회
         const { data: orgs, error: orgsErr } = await supabase
             .from("rfp_public_org")
             .select("id, org_name, org_type, homepage_url, rfp_url, coll_meth, is_active")
@@ -196,9 +232,9 @@ export class RfpScraper {
 
         console.log(`[RfpScraper] Processing ${orgs.length} active orgs`);
 
-        // 2. 기관별 수집
+        // 3. 기관별 수집
         for (const org of orgs as PublicOrg[]) {
-            const result = await this.scrapeOrg(supabase, org);
+            const result = await this.scrapeOrg(supabase, org, filterKeywords);
             results.push(result);
             console.log(
                 `[RfpScraper] ${org.org_name}: ${result.status} ` +
@@ -206,11 +242,18 @@ export class RfpScraper {
             );
         }
 
-        // 3. 신규 공고가 있으면 이메일 발송
+        // 4. 신규 공고가 있으면 이메일 발송
         const allNewItems: NewAnnouncementItem[] = results.flatMap((r) => r.newItems ?? []);
         if (allNewItems.length > 0) {
             try {
-                await sendNewAnnouncementsEmail(allNewItems);
+                // 활성 키워드 조회
+                const { data: kwData } = await getAdminClient()
+                    .from("rfp_filter_keywords")
+                    .select("keyword")
+                    .eq("is_active", true)
+                    .order("id", { ascending: true });
+                const activeKeywords = (kwData ?? []).map((k: any) => k.keyword);
+                await sendNewAnnouncementsEmail(allNewItems, activeKeywords);
             } catch (mailErr: any) {
                 console.error("[RfpScraper] 이메일 발송 실패:", mailErr.message);
             }
@@ -219,8 +262,18 @@ export class RfpScraper {
         return results;
     }
 
+    /** 제목 또는 설명에 활성 필터링 키워드가 하나라도 포함되는지 검사 */
+    private matchesKeywords(ann: ScrapedAnnouncement, keywords: string[]): boolean {
+        if (keywords.length === 0) return true; // 키워드 없으면 전체 통과
+        const haystack = [
+            ann.title ?? "",
+            ann.description ?? "",
+        ].join(" ").toLowerCase();
+        return keywords.some((kw) => haystack.includes(kw));
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async scrapeOrg(supabase: SupabaseClient<any, any, any>, org: PublicOrg): Promise<ScrapeOrgResult> {
+    private async scrapeOrg(supabase: SupabaseClient<any, any, any>, org: PublicOrg, filterKeywords: string[] = []): Promise<ScrapeOrgResult> {
         const base: ScrapeOrgResult = {
             org_id: org.id,
             org_name: org.org_name,
@@ -229,16 +282,30 @@ export class RfpScraper {
             skipped: 0,
         };
 
-        if (!org.rfp_url) {
+        if (!org.rfp_url && !this.isNaraOrg(org.org_name)) {
             return { ...base, status: "skipped", error: "rfp_url 없음" };
         }
 
         // 3. 엔진 분기: URL 패턴 우선 → coll_meth 순서로 결정
         let announcements: ScrapedAnnouncement[] = [];
         try {
-            if (org.coll_meth === "Dynamic Scraper") {
-                announcements = await this.dynamicScraper.scrape(org.rfp_url, org.org_name);
-            } else if (this.isNiaUrl(org.rfp_url)) {
+            if (this.isNaraOrg(org.org_name)) {
+                // 나라장터(조달청): Open API 사용 — rfp_url 불필요
+                const naraResults = await scrapeNaraAnnouncements(
+                    filterKeywords.length > 0 ? filterKeywords : []
+                );
+                announcements = naraResults.map((r) => ({
+                    title: r.title,
+                    category: "입찰공고",
+                    announce_date: r.announce_date || null,
+                    description: r.description,
+                    source_url: r.source_url,
+                    org_name: r.org_name || null,      // 공고기관명 (ntceInsttNm)
+                    demand_org_name: r.demand_org_name || null,  // 수요기관명 (dminsttNm)
+                }));
+            } else if (org.coll_meth === "Dynamic Scraper") {
+                announcements = await this.dynamicScraper.scrape(org.rfp_url!, org.org_name);
+            } else if (this.isNiaUrl(org.rfp_url!)) {
                 // NIA(한국지능정보사회진흥원): 전용 스크래퍼 사용
                 const niaResults = await scrapeNiaAnnouncements(1, true);
                 announcements = niaResults.map((r) => ({
@@ -248,7 +315,7 @@ export class RfpScraper {
                     description: r.content?.slice(0, 2000) || null,
                     source_url: r.source_url,
                 }));
-            } else if (this.isNipaUrl(org.rfp_url)) {
+            } else if (this.isNipaUrl(org.rfp_url!)) {
                 // NIPA(정보통신산업진흥원): 전용 스크래퍼 사용
                 const nipaResults = await scrapeNipaAnnouncements(1, true);
                 announcements = nipaResults.map((r) => ({
@@ -258,9 +325,43 @@ export class RfpScraper {
                     description: r.content?.slice(0, 2000) || null,
                     source_url: r.source_url,
                 }));
+            } else if (this.isIitpUrl(org.rfp_url!)) {
+                // IITP(정보통신기획평가원): 전용 스크래퍼 사용
+                const iitpResults = await scrapeIitpAnnouncements(20);
+                announcements = iitpResults.map((r) => ({
+                    title: r.title,
+                    category: "입찰공고",
+                    announce_date: r.date || null,
+                    description: r.content?.slice(0, 2000) || null,
+                    source_url: r.source_url,
+                }));
+            } else if (this.isKeitUrl(org.rfp_url!)) {
+                // KEIT(한국산업기술기획평가원): 전용 스크래퍼 사용
+                const keitResults = await scrapeKeitAnnouncements(1);
+                announcements = keitResults.map((r) => ({
+                    title: r.title,
+                    category: "공고",
+                    announce_date: r.date || null,
+                    description: r.receiptEnd
+                        ? `접수기간: ${r.receiptStart} ~ ${r.receiptEnd}`
+                        : null,
+                    source_url: r.source_url,
+                }));
+            } else if (this.isNaraOrg(org.org_name)) {
+                // 나라장터(조달청): Open API 사용 (키워드 내부 적용)
+                const naraResults = await scrapeNaraAnnouncements(
+                    filterKeywords.length > 0 ? filterKeywords : []
+                );
+                announcements = naraResults.map((r) => ({
+                    title: r.title,
+                    category: "입찰공고",
+                    announce_date: r.announce_date || null,
+                    description: r.description,
+                    source_url: r.source_url,
+                }));
             } else {
                 // 범용 Cheerio 스크래퍼 (table/list/RSS 전략)
-                announcements = await this.staticScraper.scrape(org.rfp_url);
+                announcements = await this.staticScraper.scrape(org.rfp_url!);
             }
         } catch (err: any) {
             return { ...base, status: "error", error: err.message };
@@ -270,12 +371,22 @@ export class RfpScraper {
             return { ...base, status: "skipped", error: "공고 없음 (파싱 결과 0건)" };
         }
 
-        // 4. 증분 저장 (unique_key 기준 → 신규만 INSERT)
+        // 4. 필터링 키워드 적용
+        const filtered = announcements.filter((ann) => this.matchesKeywords(ann, filterKeywords));
+        console.log(
+            `[RfpScraper] ${org.org_name}: 수집 ${announcements.length}건 → 키워드 필터 후 ${filtered.length}건`
+        );
+
+        if (filtered.length === 0) {
+            return { ...base, status: "skipped", error: "키워드 매칭 결과 0건" };
+        }
+
+        // 5. 증분 저장 (unique_key 기준 → 신규만 INSERT)
         let inserted = 0;
         let skipped = 0;
         const newItems: NewAnnouncementItem[] = [];
 
-        for (const ann of announcements) {
+        for (const ann of filtered) {
             if (!ann.title?.trim()) continue;
 
             const unique_key = buildUniqueKey(org.id, ann.title, ann.announce_date);
@@ -288,6 +399,8 @@ export class RfpScraper {
                 announce_date: ann.announce_date ?? null,
                 description: ann.description ?? null,
                 source_url: ann.source_url ?? null,
+                org_name: ann.org_name ?? null,          // 공고기관명 (ntceInsttNm)
+                demand_org_name: ann.demand_org_name ?? null, // 수요기관명 (dminsttNm)
                 is_active: true,
                 scraped_at: new Date().toISOString(),
             };
