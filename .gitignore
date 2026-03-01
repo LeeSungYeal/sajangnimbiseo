@@ -1,1 +1,6 @@
-node_modules
+# Next.js 빌드 폴더 제외
+.next/
+out/
+
+# 의존성 폴더 제외 (이미 추가되어 있겠지만 확인차)
+node_modules/

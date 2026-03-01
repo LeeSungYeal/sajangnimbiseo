@@ -1,7 +1,0 @@
-{
-  "/announcements/[id]/page": "app/announcements/[id]/page.js",
-  "/announcements/filter/page": "app/announcements/filter/page.js",
-  "/announcements/page": "app/announcements/page.js",
-  "/api/cron/rfp-scrape/route": "app/api/cron/rfp-scrape/route.js",
-  "/icon/route": "app-edge-has-no-entrypoint"
-}
